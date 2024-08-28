@@ -42,23 +42,17 @@ def f_driver(f_customOptions, f_browserstackOptions):
     driver.quit()
 
 @pytest.fixture
-def chrome_driver(request):
-    headless = request.config.getoption("--headless")
-    options = webdriver.ChromeOptions()
-    if headless:
-        options.add_argument("--headless")
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
-    yield driver
-    driver.quit()
+def f_browserstackOptions(request):
+    bs = request.config.getoption("--browserstack")
+    ver = request.config.getoption("--ver")
+    return (bs, ver)
 
 @pytest.fixture
-def firefox_driver(request):
-    headless = request.config.getoption("--headless")
-    options = webdriver.FirefoxOptions()
-    options.headless = headless
-    driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
-    yield driver
-    driver.quit()
+def f_customOptions(request):
+    head = request.config.getoption("--headless")
+    browser = request.config.getoption("--browser")
+    app_url = request.config.getoption("--app_url")
+    return (head, browser, app_url)
 
 def pytest_configure(config):
     config.addinivalue_line(
