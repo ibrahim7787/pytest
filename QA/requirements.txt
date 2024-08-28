@@ -1,0 +1,16 @@
+pytest
+selenium==4.*
+
+pytz
+Appium-Python-Client
+
+black==24.3.0
+
+# browserstack-local
+jsonmerge
+selenium==4.*
+# psutil
+# pytest-variables
+# pytest-selenium
+# browserstack-sdk
+# pytest-html==3.2.0

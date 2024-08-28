@@ -1,0 +1,34 @@
+trigger:
+  branches:
+    include:
+      - azurepoc
+
+pool:
+  name: Default
+
+variables:
+  pythonVersion: '3.8'
+
+steps:
+- task: UsePythonVersion@0
+  displayName: 'Use Python $(pythonVersion)'
+  inputs:
+    versionSpec: '$(pythonVersion)'
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+- script: |
+   
+    pip install pytest
+    pytest ui-systests/webapp/marketing/test_resources.py -B browserstack
+  displayName: 'Run pytest'
+  failOnStderr: true
+
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results'
+  inputs:
+    testResultsFiles: '**/test-results.xml'
+    testRunTitle: 'Python $(pythonVersion)'

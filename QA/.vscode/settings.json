@@ -1,0 +1,79 @@
+{
+  "files.trimTrailingWhitespace": true,
+  "files.trimFinalNewlines": true,
+  "editor.formatOnSave": true,
+  // "editor.formatOnSaveMode": "modifications" -- because black doesn't support
+
+  "[python]": {
+    "editor.formatOnPaste": false,
+    "editor.formatOnSaveMode": "file",
+    "editor.formatOnSave": true,
+    // WOuld like to move to ruff, but ruff not supporting skip-string-normalization, and maybe not line-length
+    // sticking w/ black until it updates that
+    "editor.defaultFormatter": "ms-python.black-formatter"
+    //"editor.defaultFormatter": "charliermarsh.ruff,
+  },
+  "black-formatter.args": [
+    "--skip-string-normalization",
+    "--line-length",
+    "100"
+  ],
+  // NOTE:
+  // to resolve unresolved package errors, see
+  // https://github.com/microsoft/pylance-release/blob/master/TROUBLESHOOTING.md#unresolved-import-warnings
+  //  tl;dr: add lines for each python subsystem
+  "python.analysis.extraPaths": [
+    "./",  
+    "./ui-systests"
+  ],
+
+  "yaml.customTags": [
+    "!And",
+    "!If",
+    "!Not",
+    "!Not sequence",
+    "!Equals",
+    "!Equals sequence",
+    "!Or",
+    "!FindInMap sequence",
+    "!Base64",
+    "!Cidr",
+    "!Ref",
+    "!Sub",
+    "!GetAtt",
+    "!GetAZs",
+    "!ImportValue",
+    "!Select",
+    "!Select sequence",
+    "!Split",
+    "!Join sequence"
+  ],
+  "yaml.format.enable": true,
+  "[yaml]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "keep",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    },
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "files.autoSave": "onWindowChange",
+  "files.exclude": {
+    "**/.ipynb_checkpoints": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.serverless": true,
+    "**/*.tgz": true,
+    "**/node_modules": true,
+    "**/pyc": true
+  },
+  "search.exclude": {
+    "**/.serverless": true
+  },
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/lalcebo/json-schema/master/serverless/reference.json": "file:///c%3A/Users/treer/vtap/platform/tapsrv/serverless.yml"
+  }
+}
