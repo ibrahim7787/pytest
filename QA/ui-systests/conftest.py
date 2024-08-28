@@ -1,21 +1,24 @@
 import os
 import pytest
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 
 from utils.log_setup import getLogger
 from utils import conf_utils
 
-log_level = os.getenv('LOG_LEVEL')
+log_level = os.getenv('LOG_LEVEL', 'INFO')
 logger = getLogger(__name__, log_level)
-
 
 @pytest.fixture
 def f_driver(f_customOptions, f_browserstackOptions):
-    headless, B, app_url = f_customOptions
+    headless, browser, app_url = f_customOptions
     browser_stack_browser, browser_stack_version = f_browserstackOptions
     driver = None
-    logger.info(f"browser: {B}")
-    os.environ['BROWSER'] = B
+    logger.info(f"browser: {browser}")
+    os.environ['BROWSER'] = browser
     bs_user = "sanjivanibodke_iJk2rp"
     bs_key = "7ANDPRjmSBsaPmdWqYXP"
     secrets_dict = {
@@ -23,21 +26,39 @@ def f_driver(f_customOptions, f_browserstackOptions):
         "key": bs_key,
         "url": f"https://{bs_user}:{bs_key}@hub-cloud.browserstack.com/wd/hub",
     }
-    cloud_mode = os.getenv('CLOUD_MODE', False)
-    if B.strip() == 'browserstack':
+    cloud_mode = os.getenv('CLOUD_MODE', 'False') == 'True'
+    
+    if browser.strip() == 'browserstack':
         driver = conf_utils.browserstack_driver(
             browser_stack_browser, browser_stack_version, secrets_dict
         )
-    if B.strip() == 'chrome':
+    elif browser.strip() == 'chrome':
         driver = conf_utils.chrome_driver(headless, cloud_mode)
-    elif B.strip() == 'firefox':
+    elif browser.strip() == 'firefox':
         options = webdriver.FirefoxOptions()
         options.headless = headless
-        # options.add_argument("start-maximized")
-        driver = webdriver.Firefox(options=options, executable_path="geckodriver")
+        driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
     yield driver
     driver.quit()
 
+@pytest.fixture
+def chrome_driver(request):
+    headless = request.config.getoption("--headless")
+    options = webdriver.ChromeOptions()
+    if headless:
+        options.add_argument("--headless")
+    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
+    yield driver
+    driver.quit()
+
+@pytest.fixture
+def firefox_driver(request):
+    headless = request.config.getoption("--headless")
+    options = webdriver.FirefoxOptions()
+    options.headless = headless
+    driver = webdriver.Firefox(service=FirefoxService(GeckoDriverManager().install()), options=options)
+    yield driver
+    driver.quit()
 
 def pytest_configure(config):
     config.addinivalue_line(
@@ -45,55 +66,8 @@ def pytest_configure(config):
         "e2e: mark test to run only on named e2e",
     )
 
-
-# @pytest.fixture
-# def f_testuserdetails():
-#     return get_test_details()
-
-
-# def get_test_details():
-#     secrets_dict = aws.get_secret(f"{env}/testuser")
-#     firstname = secrets_dict['FIRST_NAME']
-#     lastname = secrets_dict['LAST_NAME']
-#     phone = secrets_dict['PHONE']
-#     email = secrets_dict['TEST_USER']
-#     password = secrets_dict['TEST_USER_PW']
-#     return firstname, lastname, phone, email, password
-
-
-# class Options:
-#     def __init__(self):
-#         pass
-
-#     def login(self, request):
-#         self.site = request.config.getoption("-S")
-#         self.email = request.config.getoption("-E")
-#         self.password = request.config.getoption("-P")
-
-#     def signup(self, request):
-#         self.site = request.config.getoption("-S")
-#         self.email = request.config.getoption("-E")
-#         self.password = request.config.getoption("-P")
-#         self.pn = request.config.getoption("-M")
-#         self.fn = request.config.getoption("-F")
-
-
-# @pytest.fixture
-# def f_login(request):
-#     options = Options()
-#     options.login(request)
-#     return options
-
-
-# @pytest.fixture
-# def f_signup(request):
-#     options = Options()
-#     options.signup(request)
-#     return options
-
-
 def pytest_addoption(parser):
-    test_firstname, _test_lastname, test_phone, test_email, test_password = (
+    test_firstname, test_lastname, test_phone, test_email, test_password = (
         "Vasu",
         "Amarapu",
         "1234567890",
@@ -102,68 +76,32 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
-        "-H", "--headless", action="store_true", default=False, help="my option: True or False"
+        "--headless", action="store_true", default=False, help="Run browser in headless mode"
     )
     parser.addoption(
-        "-S", "--site", action="store", default=None, help="provide complete url to site"
+        "--site", action="store", default=None, help="Provide complete URL to site"
     )
     parser.addoption(
-        "-A",
-        "--app_url",
-        action="store",
-        default=None,
-        help="provide mobile app url from browserstack",
+        "--app_url", action="store", default=None, help="Provide mobile app URL from BrowserStack"
     )
     parser.addoption(
-        "-B",
-        "--browser",
-        action="store",
-        default="chrome",
-        help="options: chrome or firefox or browserstack",
-    )
-    parser.addoption("-E", "--email", action="store", default=test_email, help="provide email")
-    parser.addoption(
-        "-P", "--password", action="store", default=test_password, help="provide password"
+        "--browser", action="store", default="chrome", help="Browser options: chrome, firefox, or browserstack"
     )
     parser.addoption(
-        "-M", "--phonenumber", action="store", default=test_phone, help="provide phonenumber"
+        "--email", action="store", default=test_email, help="Provide email"
     )
     parser.addoption(
-        "-F", "--firstname", action="store", default=test_firstname, help="provide firstname"
+        "--password", action="store", default=test_password, help="Provide password"
     )
     parser.addoption(
-        "-N",
-        "--browserstack",
-        action="store",
-        default="chrome",
-        help="options: chrome or firefox",
+        "--phonenumber", action="store", default=test_phone, help="Provide phone number"
     )
     parser.addoption(
-        "-R",
-        "--ver",
-        action="store",
-        default="latest",
-        help="options: chrome(latest/94,95,..) or firefox or browserstack",
+        "--firstname", action="store", default=test_firstname, help="Provide first name"
     )
-    # parser.addoption(
-    #     "-X",
-    #     "--log_cli_format",
-    #     action="store",
-    #     default=fmt,
-    #     help="provide complete url to site",
-    # )
-
-
-@pytest.fixture
-def f_browserstackOptions(request):
-    bs = request.config.getoption("-N")
-    ver = request.config.getoption("-R")
-    return (bs, ver)
-
-
-@pytest.fixture
-def f_customOptions(request):
-    head = request.config.getoption("--headless")
-    brow = request.config.getoption("-B")
-    app_url = request.config.getoption("-A")
-    return (head, brow, app_url)
+    parser.addoption(
+        "--browserstack", action="store", default="chrome", help="Browser options for BrowserStack: chrome, firefox"
+    )
+    parser.addoption(
+        "--ver", action="store", default="latest", help="Version options: chrome(latest/94,95,..), firefox, or browserstack"
+    )
