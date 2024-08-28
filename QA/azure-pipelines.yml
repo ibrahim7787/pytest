@@ -1,34 +1,33 @@
 trigger:
-  branches:
-    include:
-      - azurepoc
+- azurepoc
 
 pool:
   name: Default
 
-variables:
-  pythonVersion: '3.8'
+strategy:
+  matrix:
+    Python37:
+      python.version: '3.7'
 
 steps:
-- task: UsePythonVersion@0
-  displayName: 'Use Python $(pythonVersion)'
+- task: PowerShell@2
   inputs:
-    versionSpec: '$(pythonVersion)'
-
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
-
-- script: |
-   
-    pip install pytest
-    pytest ui-systests/webapp/marketing/test_resources.py -B browserstack
-  displayName: 'Run pytest'
-  failOnStderr: true
-
-- task: PublishTestResults@2
-  displayName: 'Publish Test Results'
-  inputs:
-    testResultsFiles: '**/test-results.xml'
-    testRunTitle: 'Python $(pythonVersion)'
+    targetType: 'inline'
+    script: |
+      # Create virtual environment
+      python -m venv venv
+      
+      # Activate the virtual environment
+      .\venv\Scripts\activate
+      
+      # Upgrade pip and install dependencies
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      
+      # Install testing tools
+      pip install pytest pytest-azurepipelines selenium
+      
+      # Run the tests
+      pytest ui-systests/webapp/marketing/test_azure_poc.py --maxfail=5 --disable-warnings -q
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: 'Set up environment and run tests'

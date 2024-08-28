@@ -28,7 +28,9 @@ def test_ebook(f_driver):
     text_on_screen = sel_utils.get_text_by_xpath(browser, "//a[contains(text(),'E-BOOK')]")
     logger.info(f"text_on_screen = {text_on_screen}")
 
+    sel_utils.wait(4, "BEFORE CLICKING EBOOK")
     sel_utils.click_by_xpath(browser, "//a[contains(text(),'E-BOOK')]")
+    sel_utils.wait(2, f"BEFORE Switching to newly opened window")
     sel_utils.switch_to_window(browser, 1)
     sel_utils.click_by_xpath(browser, "//input[@value='Redeem']")
     expected_msg = "Please Provide bookstub code"

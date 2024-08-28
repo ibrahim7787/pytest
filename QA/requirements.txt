@@ -9,6 +9,7 @@ black==24.3.0
 # browserstack-local
 jsonmerge
 selenium==4.*
+webdriver-manager
 # psutil
 # pytest-variables
 # pytest-selenium
